@@ -1,1 +1,27 @@
 /* App.css */
+
+/* 
+What Is App.css For?
+
+App.css is for styling the layout of your application shell.
+
+Not global browser rules.
+Not individual components.
+
+But the structure that wraps everything.
+
+Think of It Like This
+
+index.css → Global rules (body, fonts, reset)
+App.css → Layout of your app
+Component.css → Specific UI pieces
+
+What Typically Goes in App.css
+
+Things like:
+Page spacing
+Layout containers
+Flexbox/grid structure
+Main content area
+Navbar spacing adjustments 
+*/
