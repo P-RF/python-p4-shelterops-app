@@ -1,10 +1,10 @@
+from config import db
 from sqlalchemy.orm import validates
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy_serializer import SerializerMixin
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from config import db
 
 # Models
 class User(db.Model, SerializerMixin):
