@@ -1,21 +1,16 @@
-# app.py
 #!/usr/bin/env python3
 
 # Standard library imports
 
 # Remote library imports
-from flask import Flask, make_response, jsonify, request
+from flask import request
 from flask_restful import Resource
-from flask_cors import CORS
 
 # Local imports
 from config import app, db, api
 
 # Add your model imports
 
-app = Flask(__name__)
-
-CORS(app)
 
 # Views go here!
 @app.route('/')

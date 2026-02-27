@@ -1,5 +1,3 @@
-# config.py
-
 # Standard library imports
 
 # Remote library imports
