@@ -112,24 +112,38 @@ class Pet(db.Model, SerializerMixin):
 class MedicationLog(db.Model, SerializerMixin):
   __tablename__ = "medication_logs"
 
-  id = 
-  user_id = 
-  pet_id = 
-  medication_name = 
-  dosage = 
-  time_given = 
-  medication_start = 
-  medication_end = 
-  frequency = 
-  notes = 
+  id = db.Column(db.Integer, primary_key=True)
+  # Foreign keys
+  user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+  pet_id = db.Column(db.Integer, db.ForeignKey("pets.id", ondelete="CASCADE"), nullable=False)
 
-  created_at = 
-  updated_at = 
+  medication_name = db.Column(db.String, nullable=False)
+  dosage = db.Column(db.String, nullable=False)
+  time_given = db.Column(db.DateTime, nullable=False)
+  medication_start = db.Column(db.Date, nullable=False)
+  medication_end = db.Column(db.Date, nullable=False)
+  frequency = db.Column(db.String, nullable=False)
+  notes = db.Column(db.String, nullable=False)
+
+  created_at = db.Column(db.DateTime, default=datetime.utcnow)
+  updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
   # Relationships
-
+  user = db.relationship("User", back_populates="medication_logs")
+  pet = db.relationship("Pet", back_populates="medication_logs")
 
   # Serialization rules
-
+  serialize_rules = ('-user.medication_logs', '-pet.medication_logs')
 
   # Validations
+  @validates("medication_name", "dosage", "frequency")
+  def validate_non_empty(self, key, value):
+    if not value or str(value).strip() == "":
+      raise ValueError(f"{key} cannot be empty")
+    return value
+
+  @validates("time_given", "medication_start", "medication_end")
+  def validate_dates(self, key, value):
+    if not isinstance(value, (datetime, datetime.date)):
+      raise ValueError(f"{key} must be a date or datetime object")
+    return value
