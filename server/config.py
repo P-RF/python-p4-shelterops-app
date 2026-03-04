@@ -1,4 +1,5 @@
 # Standard library imports
+import os
 
 # Remote library imports
 from flask import Flask
@@ -15,6 +16,11 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.json.compact = False
+
+# Images folder config
+BASE_DIR = os.getcwd()
+IMAGES_FOLDER = os.path.join(BASE_DIR, "images")
+app.config['IMAGES_FOLDER'] = IMAGES_FOLDER
 
 # Define metadata, instantiate db
 metadata = MetaData(naming_convention={

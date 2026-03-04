@@ -2,7 +2,7 @@ from config import db
 from sqlalchemy.orm import validates
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy_serializer import SerializerMixin
-from datetime import datetime
+from datetime import date, datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
@@ -69,6 +69,7 @@ class Pet(db.Model, SerializerMixin):
   favorite_toy = db.Column(db.String)
   favorite_treat = db.Column(db.String)
   notes = db.Column(db.String)
+  profile_image = db.Column(db.String)
 
   created_at = db.Column(db.DateTime, default=datetime.utcnow)
   updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -82,7 +83,7 @@ class Pet(db.Model, SerializerMixin):
 
   # Validations
   @validates("name", "breed", "sex", "weight", "origin_location", "adoption_status")
-  def validate_non_empty(self, key, value):
+  def validate_not_empty(self, key, value):
       if not value or str(value).strip() == "":
         raise ValueError(f"{key} cannot be empty")
       return value
@@ -93,16 +94,10 @@ class Pet(db.Model, SerializerMixin):
           raise ValueError("Age cannot be negative")
       return value
 
-  @validates("weight")
-  def validate_weight(self, key, value):
-    if not value:
-      raise ValueError("Weight cannot be empty")
-    return value
-
   @validates("date_of_birth", "dob_estimated", "intake_date")
   def validate_dates(self, key, value):
-    if value and not isinstance(value, datetime.date):
-      raise ValueError(f"{key} must be a date")
+    if value is not None and not isinstance(value, (date, datetime)):
+      raise ValueError(f"{key} must be a date or datetime object")
     return value
 
   def __repr__(self):
@@ -144,6 +139,6 @@ class MedicationLog(db.Model, SerializerMixin):
 
   @validates("time_given", "medication_start", "medication_end")
   def validate_dates(self, key, value):
-    if not isinstance(value, (datetime, datetime.date)):
+    if value is not None and not isinstance(value, (date, datetime)):
       raise ValueError(f"{key} must be a date or datetime object")
     return value
