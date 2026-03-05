@@ -10,11 +10,11 @@ class User(db.Model, SerializerMixin):
   __tablename__ = "users"
 
   id = db.Column(db.Integer, primary_key=True) 
-  username = db.Column(db.String, nullable=False, unique=True)
-  name = db.Column(db.String, nullable=False)
-  email = db.Column(db.String, nullable=False, unique=True)
-  _password_hash = db.Column(db.String, nullable=False)
-  role = db.Column(db.String, nullable=False)
+  username = db.Column(db.String(50), nullable=False, unique=True)
+  name = db.Column(db.String(50), nullable=False)
+  email = db.Column(db.String(255), nullable=False, unique=True)
+  _password_hash = db.Column(db.String(128), nullable=False)
+  role = db.Column(db.String(50), nullable=False)
 
   created_at = db.Column(db.DateTime, default=datetime.utcnow)
   updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -49,12 +49,6 @@ class User(db.Model, SerializerMixin):
       raise ValueError("Invalid email")
     return value
 
-  @validates("_password_hash")
-  def validate_password(self, key, value):
-    if not value:
-      raise ValueError("Password required")
-    return value
-
   def __repr__(self):
     return f"<User {self.username}>"
 
@@ -63,19 +57,19 @@ class Pet(db.Model, SerializerMixin):
   __tablename__ = "pets"
 
   id = db.Column(db.Integer, primary_key=True)
-  name = db.Column(db.String, nullable=False)
-  breed = db.Column(db.String, nullable=False)
+  name = db.Column(db.String(100), nullable=False)
+  breed = db.Column(db.String(100), nullable=False)
   age = db.Column(db.Integer)
-  sex = db.Column(db.String, nullable=False)
-  weight = db.Column(db.String, nullable=False)
+  sex = db.Column(db.String(10), nullable=False)
+  weight = db.Column(db.String(20), nullable=False)
   date_of_birth = db.Column(db.Date)
   dob_estimated = db.Column(db.Date)
-  origin_location = db.Column(db.String, nullable=False)
+  origin_location = db.Column(db.String(100), nullable=False)
   intake_date = db.Column(db.Date)
-  adoption_status = db.Column(db.String, nullable=False)
+  adoption_status = db.Column(db.String(50), nullable=False)
   favorite_toy = db.Column(db.String)
   favorite_treat = db.Column(db.String)
-  notes = db.Column(db.String)
+  notes = db.Column(db.Text)
   profile_image = db.Column(db.String)
 
   created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -119,13 +113,13 @@ class MedicationLog(db.Model, SerializerMixin):
   user_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
   pet_id = db.Column(db.Integer, db.ForeignKey("pets.id", ondelete="CASCADE"), nullable=False)
 
-  medication_name = db.Column(db.String, nullable=False)
-  dosage = db.Column(db.String, nullable=False)
+  medication_name = db.Column(db.String(100), nullable=False)
+  dosage = db.Column(db.String(50), nullable=False)
   time_given = db.Column(db.DateTime, nullable=False)
   medication_start = db.Column(db.Date, nullable=False)
   medication_end = db.Column(db.Date, nullable=False)
-  frequency = db.Column(db.String, nullable=False)
-  notes = db.Column(db.String, nullable=False)
+  frequency = db.Column(db.String(50), nullable=False)
+  notes = db.Column(db.Text, nullable=False)
 
   created_at = db.Column(db.DateTime, default=datetime.utcnow)
   updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

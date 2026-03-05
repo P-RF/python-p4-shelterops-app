@@ -22,7 +22,6 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-
 # Views go here!
 @app.route('/')
 def index():
@@ -53,25 +52,18 @@ class Signup(Resource):
         # Conditions
         if not data.get('username'):
             errors.append("Username is required")
-
         if not data.get('password'):
             errors.append("Password is required")
-        
         if not data.get('name'):
             errors.append("Name is required")
-
         if not data.get('email'):
             errors.append("Email is required")
-
         if not data.get('role'):
             errors.append("Role is required")
-
         if User.query.filter(db.func.lower(User.username) == data['username'].lower()).first():
             errors.append("Username already exists")
-
         if User.query.filter(db.func.lower(User.email) == data['email'].lower()).first():
             errors.append("Email already exists")
-
         if errors:
             return {"errors": errors}, 422
 
@@ -81,7 +73,7 @@ class Signup(Resource):
             email=data['email'],
             role=data['role']
         )
-        user.set_password(data['password'])
+        user.password_hash = data['password']
 
         db.session.add(user)
         db.session.commit()
@@ -108,16 +100,33 @@ class Login(Resource):
     def post(self):
         data = request.get_json()
 
-        user = User.query.filter(User.username == data['username']).first()
+        username = data.get('username')
+        password = data.get('password')
 
-        if user and user.authenticate(data['password']):
+        if not username:
+            return {"error": "Username is required"}, 400
+        if not password:
+            return {"error": "Password is required"}, 400
+
+        user = User.query.filter_by(username=username).first()
+
+        if user and user.authenticate(password):
             session['user_id'] = user.id
-            return user.to_dict(), 200
+            return {
+                "id": user.id,
+                "username": user.username,
+                "role": user.role
+            }, 200
         return {"error": "Invalid username or password"}, 401
 
 class Logout(Resource):
     def delete(self):
-        return ''
+        user_id = session.pop('user_id', None)
+
+        if not user_id:
+            return {"error": "Unauthorized"}, 401
+
+        return {}, 204
 
 
 # User views
