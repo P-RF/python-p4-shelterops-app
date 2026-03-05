@@ -37,16 +37,58 @@ def authorize():
 
 @app.before_request
 def check_if_logged_in():
-    pubilc_endpoints = ['index', 'signup', 'login', 'check_session']
+    public_endpoints = ['index', 'Signup', 'Login', 'CheckSession']
     if request.endpoint in public_endpoints:
         return
     if not session.get('user_id'):
-        return {'error' : 'Unauthorized'}, 401
+        return {"error" : "Unauthorized"}, 401
 
 # Authorization endpoints
 class Signup(Resource):
     def post(self):
-        return ''
+        data = request.get_json()
+
+        errors = []
+
+        # Conditions
+        if not data.get('username'):
+            errors.append("Username is required")
+
+        if not data.get('password'):
+            errors.append("Password is required")
+        
+        if not data.get('name'):
+            errors.append("Name is required")
+
+        if not data.get('email'):
+            errors.append("Email is required")
+
+        if not data.get('role'):
+            errors.append("Role is required")
+
+        if User.query.filter(db.func.lower(User.username) == data['username'].lower()).first():
+            errors.append("Username already exists")
+
+        if User.query.filter(db.func.lower(User.email) == data['email'].lower()).first():
+            errors.append("Email already exists")
+
+        if errors:
+            return {"errors": errors}, 422
+
+        user = User (
+            username=data['username'],
+            name=data['name'],
+            email=data['email'],
+            role=data['role']
+        )
+        user.set_password(data['password'])
+
+        db.session.add(user)
+        db.session.commit()
+
+        session['user_id'] = user.id
+
+        return user.to_dict(), 201
 
 class Login(Resource):
     def post(self):
@@ -66,10 +108,10 @@ class Users(Resource):
     def get(self):
         user = authorize()
         if not user:
-            return {'error': 'Unauthorized'}, 401
+            return {"error": "Unauthorized"}, 401
         
-        if user.role != 'admin':
-            return {'error': 'Forbidden'}, 403
+        if user.role != "admin":
+            return {"error": "Forbidden"}, 403
 
         users = User.query.all()
         return [u.to_dict() for u in users], 200
@@ -84,10 +126,10 @@ class UserByID(Resource):
     def delete(self, id):
         user = authorize()
         if not user:
-            return {'error': 'Unauthorized'}, 401
+            return {"error": "Unauthorized"}, 401
 
-        if user.role != 'admin':
-            return {'error': 'Forbidden'}, 403
+        if user.role != "admin":
+            return {"error": "Forbidden"}, 403
 
         u = User.query.get_or_404(id)
         db.session.delete(u)
@@ -117,17 +159,17 @@ class PetImageUpload(Resource):
     def post(self, pet_id):
         pet = Pet.query.get(pet_id)
         if not pet:
-            return {'error': f"Pet with id {pet_id} not found"}, 404
+            return {"error": f"Pet with id {pet_id} not found"}, 404
 
         if 'file' not in request.files:
-            return {'error': 'No file part'}, 400
+            return {"error": "No file part"}, 400
 
         file = request.files['file']
         if file.filename == '':
-            return {'error': 'No selected file'}, 400
+            return {"error": "No selected file"}, 400
 
         if not allowed_file(file.filename):
-            return {'error': 'File type not allowed'}, 400
+            return {"error": "File type not allowed"}, 400
 
         # Save file
         filename = f"{pet.id}_{secure_filename(file.filename)}"
@@ -139,8 +181,8 @@ class PetImageUpload(Resource):
         db.session.commit()
 
         return {
-            'message': 'Image uploaded successfully!',
-            'profile_image': f"/images/{filename}"
+            "message": "Image uploaded successfully!",
+            "profile_image": f"/images/{filename}"
         }, 201
 
 class PetImageResource(Resource):
