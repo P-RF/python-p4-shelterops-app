@@ -4,12 +4,15 @@
 import os
 
 # Remote library imports
-from flask import request, send_from_directory
+from flask import session, request, send_from_directory
 from flask_restful import Resource
 from werkzeug.utils import secure_filename
 
 # Local imports
 from config import app, db, api
+
+# Model imports
+from models import User, Pet, MedicationLog
 
 # Check if images exist
 os.makedirs(app.config['IMAGES_FOLDER'], exist_ok=True)
@@ -19,13 +22,103 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# Add your model imports
-from models import User, Pet, MedicationLog
 
 # Views go here!
 @app.route('/')
 def index():
     return '<h1>Project Server</h1>'
+
+# Authorization
+def authorize():
+    user_id = session.get("user_id")
+    if not user_id:
+        return None
+    return User.query.get(user_id)
+
+class Signup(Resource):
+    def post(self):
+        return ''
+
+class Login(Resource):
+    def post(self):
+        return ''
+
+class Logout(Resource):
+    def delete(self):
+        return ''
+
+class CheckSession(Resource):
+    def get(self):
+        return ''
+
+
+# User views
+class Users(Resource):
+    def get(self):
+        user = authorize()
+        if not user:
+            return {"error": "Unauthorized"}, 401
+        
+        if user.role != "admin":
+            return {"error": "Forbidden"}, 403
+
+        users = User.query.all()
+        return [u.to_dict() for u in users], 200
+
+class UserByID(Resource):
+    def get(self, id):
+        return ''
+
+    def patch(self, id):
+        return ''
+
+    def delete(self, id):
+        user = authorize()
+        if not user:
+            return {"error": "Unauthorized"}, 401
+
+        if user.role != "admin":
+            return {"error": "Forbidden"}, 403
+
+        u = User.query.get_or_404(id)
+        db.session.delete(u)
+        db.session.commit()
+        return {}, 204
+
+# Pet views
+class Pets(Resource):
+    def get(self):
+        return ''
+
+    def post(self):
+        return ''
+
+class PetByID(Resource):
+    def get(self, id):
+        return ''
+
+    def patch(self, id):
+        return ''
+
+    def delete(self, id):
+        return ''
+
+
+# Medication Log views
+class MedicationLogs(Resource):
+    def get(self):
+        return ''
+
+    def post(self):
+        return ''
+
+class MedicationLogByID(Resource):
+    def patch(self, id):
+        return ''
+
+    def delete(self, id):
+        return ''
+
 
 class PetImageUpload(Resource):
     def post(self, pet_id):
@@ -61,7 +154,21 @@ class PetImageResource(Resource):
     def get(self, filename):
         return send_from_directory(app.config['IMAGES_FOLDER'], filename)
 
-    
+
+api.add_resource(Signup, '/signup')    
+api.add_resource(Login, '/login')    
+api.add_resource(Logout, '/logout')
+api.add_resource(CheckSession, '/check_session')
+
+api.add_resource(Users, '/users')
+api.add_resource(UsersByID, '/users/<int:id>')
+
+api.add_resource(Pets, '/pets')
+api.add_resource(PetByID, '/pets/<int:id>')
+
+api.add_resource(MedicationLogs, '/medication_logs')
+api.add_resource(MedicationLogByID, '/medication_logs/<int:id>')
+
 api.add_resource(PetImageUpload, '/pets/<int:pet_id>/upload_image')
 api.add_resource(PetImageResource, '/images/<string:filename>')
 
