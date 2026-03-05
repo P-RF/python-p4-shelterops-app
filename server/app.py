@@ -90,16 +90,26 @@ class Signup(Resource):
 
         return user.to_dict(), 201
 
+class CheckSession(Resource):
+    def get(self):
+        user_id = session.get('user_id')
+
+        if user_id:
+            user = db.session.get(User, user_id)
+            if user:
+                return {
+                    "id": user.id,
+                    "username": user.username,
+                    "role": user.role
+                }, 200
+        return {"error": "Unauthorized"}, 401
+
 class Login(Resource):
     def post(self):
         return ''
 
 class Logout(Resource):
     def delete(self):
-        return ''
-
-class CheckSession(Resource):
-    def get(self):
         return ''
 
 
@@ -207,10 +217,10 @@ class MedicationLogByID(Resource):
 
 
 
-api.add_resource(Signup, '/signup')    
+api.add_resource(Signup, '/signup') 
+api.add_resource(CheckSession, '/check_session')   
 api.add_resource(Login, '/login')    
 api.add_resource(Logout, '/logout')
-api.add_resource(CheckSession, '/check_session')
 
 api.add_resource(Users, '/users')
 api.add_resource(UserByID, '/users/<int:id>')
