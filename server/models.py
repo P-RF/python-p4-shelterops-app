@@ -1,10 +1,9 @@
-from config import db
+from config import db, bcrypt
 from sqlalchemy.orm import validates
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy_serializer import SerializerMixin
 from datetime import date, datetime
-from werkzeug.security import generate_password_hash, check_password_hash
-
 
 # Models
 class User(db.Model, SerializerMixin):
@@ -14,7 +13,7 @@ class User(db.Model, SerializerMixin):
   username = db.Column(db.String, nullable=False, unique=True)
   name = db.Column(db.String, nullable=False)
   email = db.Column(db.String, nullable=False, unique=True)
-  password_hash = db.Column(db.String, nullable=False)
+  _password_hash = db.Column(db.String, nullable=False)
   role = db.Column(db.String, nullable=False)
 
   created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -25,15 +24,23 @@ class User(db.Model, SerializerMixin):
   pets = association_proxy('medication_logs', 'pet')
 
   # Serialization rules
-  serialize_rules = ('-password_hash', '-medication_logs.user', '-medication_logs.pet')
+  serialize_rules = ('-_password_hash', '-medication_logs.user', '-medication_logs.pet')
 
-  def set_password(self, password):
-    if len(password) < 8:
+  # Password property
+  @hybrid_property
+  def password_hash(self):
+    raise AttributeError('Password hashes may not be viewed.')
+
+  @password_hash.setter
+  def password_hash(self, password):
+    if not password or len(password) < 8:
       raise ValueError("Password must be at least 8 characters")
-    self.password_hash = generate_password_hash(password)
+    pw_hash = bcrypt.generate_password_hash(password.encode('utf-8'))
+    self._password_hash = pw_hash.decode('utf-8')
 
-  def check_password(self, password):
-    return check_password_hash(self.password_hash, password)
+  def authenticate(self, password):
+    return bcrypt.check_password_hash(
+      self._password_hash, password.encode('utf-8'))
 
   # Validations
   @validates("email")
@@ -42,7 +49,7 @@ class User(db.Model, SerializerMixin):
       raise ValueError("Invalid email")
     return value
 
-  @validates("password_hash")
+  @validates("_password_hash")
   def validate_password(self, key, value):
     if not value:
       raise ValueError("Password required")
