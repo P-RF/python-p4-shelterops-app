@@ -176,7 +176,47 @@ class Pets(Resource):
 
 class PetByID(Resource):
     def get(self, id):
-        return ''
+
+        pet = Pet.query.get(id)
+
+        if not pet:
+            return {"error": "Pet not found"}, 404
+
+        response_dict = {
+            "id": pet.id,
+            "name": pet.name,
+            "breed": pet.breed,
+            "age": pet.age,
+            "sex": pet.sex,
+            "weight": pet.weight,
+            "date_of_birth": pet.date_of_birth,
+            "dob_estimated": pet.dob_estimated,
+            "origin_location": pet.origin_location,
+            "intake_date": pet.intake_date,
+            "adoption_status": pet.adoption_status,
+            "favorite_toy": pet.favorite_toy,
+            "favorite_treat": pet.favorite_treat,
+            "notes": pet.notes,
+            "medication_logs": []
+        }
+
+        for ml in pet.medication_logs:
+            medication_logs_dict = {
+                "id": ml.id,
+                "medication_name": ml.medication_name,
+                "dosage": ml.dosage,
+                "time_given": ml.time_given,
+                "medication_start": ml.medication_start,
+                "medication_end": ml.medication_end,
+                "frequency": ml.frequency,
+                "notes": ml.notes,
+                "user_id": ml.user_id,
+                "pet_id": ml.pet_id,
+            }
+
+            response_dict["medication_logs"].append(medication_logs_dict)
+
+        return response_dict, 200
 
     def patch(self, id):
         return ''
