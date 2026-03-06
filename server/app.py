@@ -145,7 +145,44 @@ class Users(Resource):
 
 class UserByID(Resource):
     def get(self, id):
-        return ''
+        user = db.session.get(User, id)
+        if not user:
+            return {"error": "User not found"}, 404
+
+        response_dict = {
+            "id": user.id,
+            "username": user.username,
+            "name": user.name,
+            "email": user.email,
+            "role": user.role,
+            "medication_logs": []
+        }
+
+        for ml in user.medication_logs:
+            medication_logs_dict = {
+                "id": ml.id,
+                "medication_name": ml.medication_name,
+                "dosage": ml.dosage,
+                "time_given": ml.time_given.isoformat() if ml.time_given else None,
+                "medication_start": ml.medication_start.isoformat() if ml.medication_start else None,
+                "medication_end": ml.medication_end.isoformat() if ml.medication_end else None,
+                "frequency": ml.frequency,
+                "notes": ml.notes,
+                "user_id": ml.user_id,
+                "pet_id": ml.pet_id,
+                "pet": {
+                    "id": ml.pet.id,
+                    "name": ml.pet.name,
+                    "breed": ml.pet.breed,
+                    "age": ml.pet.age,
+                    "adoption_status": ml.pet.adoption_status,
+                    "favorite_toy": ml.pet.favorite_toy,
+                    "favorite_treat": ml.pet.favorite_treat,
+                }
+            }
+            response_dict["medication_logs"].append(medication_logs_dict)
+
+        return response_dict, 200
 
     def patch(self, id):
         return ''
@@ -177,7 +214,7 @@ class Pets(Resource):
 class PetByID(Resource):
     def get(self, id):
 
-        pet = Pet.query.get(id)
+        pet = db.session.get(Pet, id)
 
         if not pet:
             return {"error": "Pet not found"}, 404
@@ -222,7 +259,15 @@ class PetByID(Resource):
         return ''
 
     def delete(self, id):
-        return ''
+        pet = db.session.get(Pet, id)
+
+        if not pet:
+            return {"error": "Pet not found"}, 404
+
+        db.session.delete(pet)
+        db.session.commit()
+
+        return '', 204
 
 # Pet image upload views
 class PetImageUpload(Resource):
@@ -235,6 +280,7 @@ class PetImageUpload(Resource):
             return {"error": "No file part"}, 400
 
         file = request.files['file']
+        
         if file.filename == '':
             return {"error": "No selected file"}, 400
 
