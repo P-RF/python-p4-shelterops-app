@@ -36,7 +36,7 @@ def authorize():
 
 @app.before_request
 def check_if_logged_in():
-    public_endpoints = ['index', 'Signup', 'Login', 'CheckSession']
+    public_endpoints = ['index', 'signup', 'login', 'checksession']
     if request.endpoint in public_endpoints:
         return
     if not session.get('user_id'):
@@ -133,6 +133,7 @@ class Logout(Resource):
 class Users(Resource):
     def get(self):
         user = authorize()
+
         if not user:
             return {"error": "Unauthorized"}, 401
         
@@ -165,9 +166,12 @@ class UserByID(Resource):
 # Pet views
 class Pets(Resource):
     def get(self):
-        return ''
+        response_dict_list = [p.to_dict() for p in Pet.query.all()]
+        return response_dict_list
 
     def post(self):
+        data = request.get_json() or {}
+
         return ''
 
 class PetByID(Resource):

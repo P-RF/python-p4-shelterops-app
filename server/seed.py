@@ -22,21 +22,21 @@ with app.app_context():
         name="Simon", 
         email="simon_99@email.com", 
         role="staff")
-    staff.set_password("password123")
+    staff.password_hash = "password123"
 
     admin = User(
         username="sarah123", 
         name="Sarah", 
         email="sarah123@email.com", 
         role="admin")
-    admin.set_password("password123")
+    admin.password_hash = "password123"
 
     volunteer = User(
         username="michelle.87", 
         name="Michelle", 
         email="michelle.87@email.com", 
         role="volunteer")
-    volunteer.set_password("password123")
+    volunteer.password_hash = "password123"
 
     users = [staff, admin, volunteer]
     db.session.add_all(users)
