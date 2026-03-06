@@ -270,9 +270,17 @@ class PetByID(Resource):
         return '', 204
 
 # Pet image upload views
-class PetImageUpload(Resource):
+class PetImageByID(Resource):
+
+    def get(self, pet_id):
+        pet = db.session.get(Pet, pet_id)
+
+        if not pet or not pet.profile_image:
+            return {"error": f"No image found for {pet_id}"}, 404
+        return send_from_directory(app.config['IMAGES_FOLDER'], pet.profile_image)
+
     def post(self, pet_id):
-        pet = Pet.query.get(pet_id)
+        pet = db.session.get(Pet, pet_id)
         if not pet:
             return {"error": f"Pet with id {pet_id} not found"}, 404
 
@@ -280,10 +288,8 @@ class PetImageUpload(Resource):
             return {"error": "No file part"}, 400
 
         file = request.files['file']
-        
         if file.filename == '':
             return {"error": "No selected file"}, 400
-
         if not allowed_file(file.filename):
             return {"error": "File type not allowed"}, 400
 
@@ -301,7 +307,55 @@ class PetImageUpload(Resource):
             "profile_image": f"/images/{filename}"
         }, 201
 
-class PetImageResource(Resource):
+    def patch(self, pet_id):
+        pet = db.session.get(Pet, pet_id)
+        if not pet:
+            return {"error": "Pet not found"}, 404
+
+        if 'file' not in request.files:
+            return {"error": "No file part"}, 400
+
+        file = request.files['file']
+        if file.filename == '':
+            return {"error": "No selected file"}, 400
+        if not allowed_file(file.filename):
+            return {"error": "File type not allowed"}, 400
+
+        if pet.profile_image:
+            old_path = os.path.join(app.config['IMAGES_FOLDER'], pet.profile_image)
+            if os.path.exists(old_path):
+                os.remove(old_path)
+
+        # Save file
+        filename = f"{pet.id}_{secure_filename(file.filename)}"
+        file_path = os.path.join(app.config['IMAGES_FOLDER'], filename)
+        file.save(file_path)
+
+        # Update image
+        pet.profile_image = filename
+        db.session.commit()
+
+        return {
+            "message": "Image updated successfully!",
+            "profile_image": f"/images/{filename}"
+        }, 200
+
+    def delete(self, pet_id):
+        pet = db.session.get(Pet, pet_id)
+
+        if not pet or not pet.profile_image:
+            return {"error": "Image not found"}, 404
+
+        old_path = os.path.join(app.config['IMAGES_FOLDER'], pet.profile_image)
+        if os.path.exists(old_path):
+            os.remove(old_path)
+
+        pet.profile_image = None
+        db.session.commit()
+
+        return '', 204
+
+class PetImageByFilename(Resource):
     def get(self, filename):
         return send_from_directory(app.config['IMAGES_FOLDER'], filename)
 
@@ -334,8 +388,8 @@ api.add_resource(UserByID, '/users/<int:id>')
 api.add_resource(Pets, '/pets')
 api.add_resource(PetByID, '/pets/<int:id>')
 
-api.add_resource(PetImageUpload, '/pets/<int:pet_id>/upload_image')
-api.add_resource(PetImageResource, '/images/<string:filename>')
+api.add_resource(PetImageByID, '/pets/<int:pet_id>/image')
+api.add_resource(PetImageByFilename, '/images/<string:filename>')
 
 api.add_resource(MedicationLogs, '/medication_logs')
 api.add_resource(MedicationLogByID, '/medication_logs/<int:id>')
