@@ -2,6 +2,7 @@
 
 # Standard library imports
 import os
+from datetime import datetime
 
 # Remote library imports
 from flask import session, request, send_from_directory
@@ -32,11 +33,11 @@ def authorize():
     user_id = session.get('user_id')
     if not user_id:
         return None
-    return User.query.get(user_id)
+    return db.session.get(User, user_id)
 
 @app.before_request
 def check_if_logged_in():
-    public_endpoints = ['index', 'signup', 'login', 'checksession']
+    public_endpoints = ['index', 'signup', 'login', 'check_session']
     if request.endpoint in public_endpoints:
         return
     if not session.get('user_id'):
@@ -45,7 +46,10 @@ def check_if_logged_in():
 # Authorization endpoints
 class Signup(Resource):
     def post(self):
-        data = request.get_json()
+        data = request.get_json() or {}
+
+        username = data.get('username')
+        email = data.get('email')
 
         errors = []
 
@@ -60,10 +64,12 @@ class Signup(Resource):
             errors.append("Email is required")
         if not data.get('role'):
             errors.append("Role is required")
-        if User.query.filter(db.func.lower(User.username) == data['username'].lower()).first():
+
+        if username and User.query.filter(db.func.lower(User.username) == username.lower()).first():
             errors.append("Username already exists")
-        if User.query.filter(db.func.lower(User.email) == data['email'].lower()).first():
+        if email and User.query.filter(db.func.lower(User.email) == email.lower()).first():
             errors.append("Email already exists")
+       
         if errors:
             return {"errors": errors}, 422
 
@@ -98,7 +104,7 @@ class CheckSession(Resource):
 
 class Login(Resource):
     def post(self):
-        data = request.get_json()
+        data = request.get_json() or  {}
 
         username = data.get('username')
         password = data.get('password')
@@ -132,12 +138,12 @@ class Logout(Resource):
 # User views
 class Users(Resource):
     def get(self):
-        user = authorize()
+        current_user = authorize()
 
-        if not user:
+        if not current_user:
             return {"error": "Unauthorized"}, 401
         
-        if user.role != "admin":
+        if current_user.role != "admin":
             return {"error": "Forbidden"}, 403
 
         users = User.query.all()
@@ -181,22 +187,23 @@ class UserByID(Resource):
                 }
             }
             response_dict["medication_logs"].append(medication_logs_dict)
-
         return response_dict, 200
 
     def patch(self, id):
         return ''
 
     def delete(self, id):
-        user = authorize()
-        if not user:
+        current_user = authorize()
+        if not current_user:
             return {"error": "Unauthorized"}, 401
-
-        if user.role != "admin":
+        if current_user.role != "admin":
             return {"error": "Forbidden"}, 403
 
-        u = User.query.get_or_404(id)
-        db.session.delete(u)
+        target_user = db.session.get(User, id)
+        if not target_user:
+            return {"error": "User not found"}, 404
+
+        db.session.delete(target_user)
         db.session.commit()
         return {}, 204
 
@@ -208,12 +215,10 @@ class Pets(Resource):
 
     def post(self):
         data = request.get_json() or {}
-
         return ''
 
 class PetByID(Resource):
     def get(self, id):
-
         pet = db.session.get(Pet, id)
 
         if not pet:
@@ -250,9 +255,7 @@ class PetByID(Resource):
                 "user_id": ml.user_id,
                 "pet_id": ml.pet_id,
             }
-
             response_dict["medication_logs"].append(medication_logs_dict)
-
         return response_dict, 200
 
     def patch(self, id):
@@ -260,14 +263,12 @@ class PetByID(Resource):
 
     def delete(self, id):
         pet = db.session.get(Pet, id)
-
         if not pet:
             return {"error": "Pet not found"}, 404
 
         db.session.delete(pet)
         db.session.commit()
-
-        return '', 204
+        return {}, 204
 
 # Pet image upload views
 class PetImageByID(Resource):
@@ -363,10 +364,72 @@ class PetImageByFilename(Resource):
 # Medication Log views
 class MedicationLogs(Resource):
     def get(self):
-        return ''
+        ml_dict_list = [ml.to_dict() for ml in MedicationLog.query.all()]
+        return ml_dict_list, 200
 
     def post(self):
-        return ''
+        current_user = authorize()
+        if not current_user:
+            return {"error": "Unauthorized"}, 401
+
+        data = request.get_json() or {}
+
+        user_id = data.get("user_id")
+        pet_id = data.get("pet_id")
+        medication_name = data.get("medication_name")
+
+        user = db.session.get(User, user_id)
+        pet = db.session.get(Pet, pet_id)
+
+        # Validation
+        if not user or not pet or not medication_name:
+            return {"errors": ["Invalid user, pet, or medication_name"]}, 400
+
+        time_given = datetime.fromisoformat(data["time_given"]) if data.get("time_given") else None
+        medication_start = datetime.fromisoformat(data["medication_start"]).date() if data.get("medication_start") else None
+        medication_end = datetime.fromisoformat(data["medication_end"]).date() if data.get("medication_end") else None
+
+        new_ml = MedicationLog(
+            user_id = data.get("user_id"),
+            pet_id = data.get("pet_id"),
+            medication_name = data.get("medication_name"),
+            dosage = data.get("dosage"),
+            time_given=time_given,
+            medication_start=medication_start,
+            medication_end=medication_end,
+            frequency = data.get("frequency"),
+            notes = data.get("notes")
+        )
+        db.session.add(new_ml)
+        db.session.commit()
+
+        response_dict = {
+            "id": new_ml.id,
+            "medication_name": new_ml.medication_name,
+            "dosage": new_ml.dosage,
+            "time_given": new_ml.time_given.isoformat() if new_ml.time_given else None,
+            "medication_start": new_ml.medication_start.isoformat() if new_ml.medication_start else None,
+            "medication_end": new_ml.medication_end.isoformat() if new_ml.medication_end else None,
+            "frequency": new_ml.frequency,
+            "notes": new_ml.notes,
+            "pet": {
+                "id": pet.id,
+                "name": pet.name,
+                "breed": pet.breed,
+                "age": pet.age,
+                "adoption_status": pet.adoption_status,
+                "favorite_toy": pet.favorite_toy,
+                "favorite_treat": pet.favorite_treat,
+            },
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "name": user.name,
+                "email": user.email,
+                "role": user.role
+            }
+        }
+        return response_dict, 201
 
 class MedicationLogByID(Resource):
     def patch(self, id):
