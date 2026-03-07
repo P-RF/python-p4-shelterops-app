@@ -513,13 +513,12 @@ class MedicationLogByID(Resource):
         if not current_user:
             return {"error": "Unauthorized"}, 401
 
+        if current_user.role != "admin":
+            return {"error": "Unauthorized to delete log"}, 403
+
         ml = db.session.get(MedicationLog, id)
         if not ml:
             return {"error": "Medication log not found"}, 404
-
-        # Only admin can delete a log
-        if current_user.role != "admin":
-            return {"error": "Unauthorized to delete log"}, 403
 
         db.session.delete(ml)
         db.session.commit()
