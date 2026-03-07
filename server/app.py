@@ -139,10 +139,8 @@ class Logout(Resource):
 class Users(Resource):
     def get(self):
         current_user = authorize()
-
         if not current_user:
             return {"error": "Unauthorized"}, 401
-        
         if current_user.role != "admin":
             return {"error": "Forbidden"}, 403
 
@@ -323,7 +321,32 @@ class PetByID(Resource):
         return response_dict, 200
 
     def patch(self, id):
-        return ''
+        current_user = authorize()
+        if not current_user:
+            return {"error": "Unauthorized"}, 401
+
+        if current_user.role not in ["admin", "staff"]:
+            return {"error": "Only admin or staff can update pets"}, 403
+
+        pet = db.session.get(Pet, id)
+        if not pet:
+            return {"error": "Pet not found"}, 404
+
+        data = request.get_json() or {}
+
+        if 'date_of_birth' in data:
+            pet.date_of_birth = datetime.strptime(data['date_of_birth'], "%m-%d-%Y").date() if data['date_of_birth'] else None
+        if 'dob_estimated' in data:
+            pet.dob_estimated = datetime.strptime(data['dob_estimated'], "%m-%d-%Y").date() if data['dob_estimated'] else None
+        if 'intake_date' in data:
+            pet.intake_date = datetime.strptime(data['intake_date'], "%m-%d-%Y").date() if data['intake_date'] else None
+
+        for attr in data:
+            if attr not in ['date_of_birth', 'dob_estimated', 'intake_date']:
+                setattr(pet, attr, data[attr])
+
+        db.session.commit()
+        return pet.to_dict(), 200
 
     def delete(self, id):
         current_user = authorize()
