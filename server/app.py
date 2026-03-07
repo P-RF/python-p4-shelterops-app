@@ -190,20 +190,53 @@ class UserByID(Resource):
         return response_dict, 200
 
     def patch(self, id):
-        return ''
+        current_user = authorize()
+        if not current_user:
+            return {"error": "Unauthorized"}, 401
+
+        if current_user.role != "admin":
+            return {"error": "Forbidden"}, 403
+
+        user = db.session.get(User, id)
+        if not user:
+            return {"error": "User not found"}, 404
+
+        data = request.get_json() or {}
+
+        if 'username' in data:
+            if User.query.filter(db.func.lower(User.username) == data['username'].lower(), User.id != user.id).first():
+                return {"error": "Username already exists"}, 422
+            user.username = data['username']
+            
+        if 'email' in data:
+            if User.query.filter(db.func.lower(User.email) == data['email'].lower(), User.id != user.id).first():
+                return {"error": "Email already exists"}, 422
+            user.email = data['email']
+
+        if 'name' in data:
+            user.name = data['name']
+        if 'role' in data:
+            user.role = data['role']
+        if 'password' in data:
+            user.password_hash = data['password']
+
+        db.session.commit()
+        return user.to_dict(), 200
 
     def delete(self, id):
         current_user = authorize()
         if not current_user:
             return {"error": "Unauthorized"}, 401
+
+        # Only admin can delete a user
         if current_user.role != "admin":
             return {"error": "Forbidden"}, 403
 
-        target_user = db.session.get(User, id)
-        if not target_user:
+        user = db.session.get(User, id)
+        if not user:
             return {"error": "User not found"}, 404
 
-        db.session.delete(target_user)
+        db.session.delete(user)
         db.session.commit()
         return {}, 204
 
@@ -262,6 +295,13 @@ class PetByID(Resource):
         return ''
 
     def delete(self, id):
+        current_user = authorize()
+        if not current_user:
+            return {"error": "Unauthorized"}, 401
+
+        if current_user.role not in ["admin", "staff"]:
+            return {"error": "Only admin or staff can delete pets"}, 403
+        
         pet = db.session.get(Pet, id)
         if not pet:
             return {"error": "Pet not found"}, 404
@@ -433,10 +473,51 @@ class MedicationLogs(Resource):
 
 class MedicationLogByID(Resource):
     def patch(self, id):
-        return ''
+        current_user = authorize()
+        if not current_user:
+            return {"error": "Unauthorized"}, 401
+
+        ml = db.session.get(MedicationLog, id)
+        if not ml:
+            return {"error": "Medication log not found"}, 404
+
+        data = request.get_json() or {}
+
+        if 'medication_name' in data:
+            ml.medication_name = data['medication_name']
+        if 'dosage' in data:
+            ml.dosage = data['dosage']
+        if 'time_given' in data:
+            ml.time_given = datetime.fromisoformat(data['time_given']) if data['time_given'] else None
+        if 'medication_start' in data:
+            ml.medication_start = datetime.fromisoformat(data['medication_start']).date() if data['medication_start'] else None
+        if 'medication_end' in data:
+            ml.medication_end = datetime.fromisoformat(data['medication_end']).date() if data['medication_end'] else None
+        if 'frequency' in data:
+            ml.frequency = data['frequency']
+        if 'notes' in data:
+            ml.notes = data['notes']
+
+        db.session.commit()
+
+        return ml.to_dict(), 200
 
     def delete(self, id):
-        return ''
+        current_user = authorize()
+        if not current_user:
+            return {"error": "Unauthorized"}, 401
+
+        ml = db.session.get(MedicationLog, id)
+        if not ml:
+            return {"error": "Medication log not found"}, 404
+
+        # Only admin can delete a log
+        if current_user.role != "admin":
+            return {"error": "Unauthorized to delete log"}, 403
+
+        db.session.delete(ml)
+        db.session.commit()
+        return {}, 204
 
 
 
