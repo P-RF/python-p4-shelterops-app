@@ -238,7 +238,7 @@ class UserByID(Resource):
 
         db.session.delete(user)
         db.session.commit()
-        return {}, 204
+        return {"message": "User deleted successfully"}, 204
 
 # Pet views
 class Pets(Resource):
