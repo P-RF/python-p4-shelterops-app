@@ -132,7 +132,7 @@ class Logout(Resource):
         if not user_id:
             return {"error": "Unauthorized"}, 401
 
-        return {}, 204
+        return {"message": "Logged out successfully"}, 204
 
 
 # User views
