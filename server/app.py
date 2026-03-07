@@ -194,7 +194,7 @@ class UserByID(Resource):
         if not current_user:
             return {"error": "Unauthorized"}, 401
 
-        if current_user.role != "admin":
+        if current_user.role not in ["admin", "staff"]:
             return {"error": "Forbidden"}, 403
 
         user = db.session.get(User, id)
@@ -207,7 +207,7 @@ class UserByID(Resource):
             if User.query.filter(db.func.lower(User.username) == data['username'].lower(), User.id != user.id).first():
                 return {"error": "Username already exists"}, 422
             user.username = data['username']
-            
+
         if 'email' in data:
             if User.query.filter(db.func.lower(User.email) == data['email'].lower(), User.id != user.id).first():
                 return {"error": "Email already exists"}, 422
