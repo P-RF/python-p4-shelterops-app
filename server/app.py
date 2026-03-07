@@ -247,8 +247,39 @@ class Pets(Resource):
         return response_dict_list
 
     def post(self):
+        current_user = authorize()
+        if not current_user:
+            return {"error": "Unauthorized"}, 401
+
+        if current_user.role not in ["admin", "staff"]:
+            return {"error": "Only admin or staff can create pets"}, 403
+
         data = request.get_json() or {}
-        return ''
+
+        date_of_birth = datetime.strptime(data['date_of_birth'], "%m-%d-%Y").date() if data.get('date_of_birth') else None
+        dob_estimated = datetime.strptime(data['dob_estimated'], "%m-%d-%Y").date() if data.get('dob_estimated') else None
+        intake_date = datetime.strptime(data['intake_date'], "%m-%d-%Y").date() if data.get('intake_date') else None
+
+        new_pet = Pet (
+            name=data.get('name'), 
+            breed=data.get('breed'), 
+            age=data.get('age'), 
+            sex= data.get('sex'),
+            weight= data.get('weight'),
+            date_of_birth=date_of_birth,
+            dob_estimated=dob_estimated,
+            origin_location= data.get('origin_location'),
+            intake_date=intake_date,
+            adoption_status= data.get('adoption_status'),
+            favorite_toy= data.get('favorite_toy'),
+            favorite_treat= data.get('favorite_treat'),
+            notes= data.get('notes'),
+            profile_image= data.get('profile_image'),
+        )
+        db.session.add(new_pet)
+        db.session.commit()
+
+        return new_pet.to_dict(), 201
 
 class PetByID(Resource):
     def get(self, id):
@@ -523,7 +554,6 @@ class MedicationLogByID(Resource):
         db.session.delete(ml)
         db.session.commit()
         return {}, 204
-
 
 
 api.add_resource(Signup, '/signup') 
