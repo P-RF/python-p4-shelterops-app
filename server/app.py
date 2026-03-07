@@ -382,8 +382,14 @@ class PetImageByID(Resource):
         }, 200
 
     def delete(self, pet_id):
-        pet = db.session.get(Pet, pet_id)
+        current_user = authorize()
+        if not current_user:
+            return {"error": "Unauthorized"}, 401
 
+        if current_user.role not in ["admin", "staff"]:
+            return {"error": "Forbidden"}, 403
+
+        pet = db.session.get(Pet, pet_id)
         if not pet or not pet.profile_image:
             return {"error": "Image not found"}, 404
 
