@@ -10,10 +10,15 @@ function Navbar({ user, setUser}) {
       method: "DELETE",
       credentials: "include"
     })
+    .then(res => {
+      if (!res.ok && res.status !== 204) throw new Error("Logout failed");
+      return res.json().catch(() => ({}));
+    })
     .then(() => {
       setUser(null);
-      navigate("/login")
-    });
+      navigate("/login", { replace: true });
+    })
+    .catch(err => console.log(err));
   }
 
   return (

@@ -69,6 +69,8 @@ class Signup(Resource):
             errors.append("Username already exists")
         if email and User.query.filter(db.func.lower(User.email) == email.lower()).first():
             errors.append("Email already exists")
+        if data.get("password") and len(data["password"]) < 8:
+            errors.append("Password must be at least 8 characters")
        
         if errors:
             return {"errors": errors}, 422
@@ -98,6 +100,7 @@ class CheckSession(Resource):
                 return {
                     "id": user.id,
                     "username": user.username,
+                    "name": user.name,
                     "role": user.role
                 }, 200
         return {"error": "Unauthorized"}, 401
@@ -121,6 +124,7 @@ class Login(Resource):
             return {
                 "id": user.id,
                 "username": user.username,
+                "name": user.name,
                 "role": user.role
             }, 200
         return {"error": "Invalid username or password"}, 401
@@ -131,7 +135,6 @@ class Logout(Resource):
 
         if not user_id:
             return {"error": "Unauthorized"}, 401
-
         return {"message": "Logged out successfully"}, 204
 
 

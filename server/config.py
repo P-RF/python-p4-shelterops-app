@@ -39,7 +39,13 @@ api = Api(app)
 
 # CORS
 FRONTEND_URLS = [
-    "http://localhost:4000", # dev
-    "http://localhost:5000", # dev
+    "http://localhost:4000", # Reach dev server
+    "http://127.0.0.1:4000", # alt host
 ]
-CORS(app, resources={r"/api/*": {"origins": FRONTEND_URLS}})
+CORS(
+    app, 
+    resources={r"/*": {"origins": FRONTEND_URLS}},
+    supports_credentials=True,
+    methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"]
+    )

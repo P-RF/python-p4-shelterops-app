@@ -33,20 +33,28 @@ function App() {
 
   return (
     <BrowserRouter>
-      {user && <Navbar user={user} setUser={setUser} />}
-
+    {user && <Navbar user={user} setUser={setUser} />}
       <Routes>
-        <Route path="/" element={<DashBoardPage />} />
-        <Route path="/login" element={<LoginPage setUser={setUser} />} />
-        <Route path="/signup" element={<CreateAccountPage setUser={setUser} />} />
-        <Route path="/pets" element={<PetlistPage />} />
-        <Route path="/pets/:id" element={<PetDetailPage />} />
-        <Route path="/pets/new" element={<PetFormPage />} />
-        <Route path="/medication_logs" element={<MedicationLogsPage />} />
-        <Route path="/medication_logs/new" element={<MedicationLogFormPage />} />
+        {user ? (
+          <>
+            <Route path="/" element={<DashBoardPage />} />
+            <Route path="/pets" element={<PetlistPage />} />
+            <Route path="/pets/:id" element={<PetDetailPage />} />
+            <Route path="/pets/new" element={<PetFormPage />} />
+            <Route path="/medication_logs" element={<MedicationLogsPage />} />
+            <Route path="/medication_logs/new" element={<MedicationLogFormPage />} />
+          </>
+        ) : (
+          <>
+            <Route path="/login" element={<LoginPage setUser={setUser} />} />
+            <Route path="/signup" element={<CreateAccountPage setUser={setUser} />} />
+            <Route path="*" element={<LoginPage setUser={setUser} />} />
+          </>
+        )}
       </Routes>
     </BrowserRouter>
   );
 }
+
 
 export default App;
