@@ -1,5 +1,5 @@
 // App.js
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Navbar from "./components/Navbar"
@@ -17,14 +17,28 @@ import MedicationLogFormPage from "./pages/MedicationLogFormPage"
 function App() {
   const [user, setUser] = useState(null); // Null = logged out
 
+  // Automatically log user in if user has a session cookie
+  useEffect(() => { 
+    fetch("http://127.0.0.1:5555/check_session", {
+      credentials: "include"
+    })
+    .then((res) => {
+      if (res.ok) {
+        return res.json();
+      }
+      return null;
+    })
+    .then((user) => setUser(user));
+  }, []);
+
   return (
     <BrowserRouter>
-      <Navbar user={user} setUser={setUser} />
+      {user && <Navbar user={user} setUser={setUser} />}
 
       <Routes>
         <Route path="/" element={<DashBoardPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<CreateAccountPage />} />
+        <Route path="/login" element={<LoginPage setUser={setUser} />} />
+        <Route path="/signup" element={<CreateAccountPage setUser={setUser} />} />
         <Route path="/pets" element={<PetlistPage />} />
         <Route path="/pets/:id" element={<PetDetailPage />} />
         <Route path="/pets/new" element={<PetFormPage />} />
