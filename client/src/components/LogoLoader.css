@@ -1,0 +1,72 @@
+.loader-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.bottle-wrapper {
+  position: relative;
+  width: 180px;
+}
+
+.bottle {
+  width: 100%;
+  position: relative;
+  z-index: 2;
+}
+
+/* pill style */
+.pill {
+  position: absolute;
+  width: 28px;
+  height: 14px;
+  border-radius: 10px;
+  background: linear-gradient(to right, white 50%, red 50%);
+  border: 2px solid #333;
+  animation: drop 2s infinite ease-in;
+}
+
+/* different delays */
+.pill1 { left: 60px; animation-delay: 0s; }
+.pill2 { left: 90px; animation-delay: 0.4s; }
+.pill3 { left: 70px; animation-delay: 0.8s; }
+.pill4 { left: 90px; animation-delay: 1.2s; }
+
+/* falling animation */
+@keyframes drop {
+  0% {
+    top: -40px;
+    opacity: 0;
+    transform: rotate(0deg);
+  }
+
+  30% {
+    opacity: 1;
+  }
+
+  70% {
+    top: 90px;
+    transform: rotate(120deg);
+  }
+
+  80% {
+    top: 79px;
+  }
+
+  90% {
+    top: 81px;
+  }
+
+  100% {
+    top: 95px;
+    opacity: 0;
+  }
+}
+
+.loading-text {
+  margin-top: 20px;
+  font-size: 18px;
+  font-weight: 500;
+}
