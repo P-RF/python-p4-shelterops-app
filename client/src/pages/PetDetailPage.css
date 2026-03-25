@@ -1,0 +1,79 @@
+/* PetDetailPage.css */
+
+.pet-detail-container {
+  display: flex;
+  gap: 30px;
+  padding: 30px;
+}
+
+/* LEFT PANEL */
+
+.pet-info-panel {
+  width: 300px;
+}
+
+.pet-detail-image {
+  width: 200px;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 60px;
+  margin-bottom: 10px;
+}
+
+.pet-info p {
+  margin: 4px 0;
+}
+
+/* RIGHT PANEL */
+
+.medication-panel {
+  flex: 1;
+  border: 2px solid black;
+  border-radius: 20px;
+  padding: 20px;
+  position: relative;
+}
+
+.medication-panel h2 {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.medication-list {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+/* MEDICATION CARD */
+
+.medication-card {
+  border: 2px solid black;
+  border-radius: 20px;
+  padding: 15px;
+  margin-bottom: 15px;
+  position: relative;
+}
+
+.delete-medication {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  background: white;
+  border: 2px solid black;
+  cursor: pointer;
+}
+
+/* ADD BUTTON */
+
+.add-medication-btn {
+  position: absolute;
+  bottom: -20px;
+  right: -20px;
+  width: 60px;
+  height: 60px;
+  font-size: 32px;
+  border-radius: 50%;
+  border: 3px solid black;
+  background: white;
+  cursor: pointer;
+}
