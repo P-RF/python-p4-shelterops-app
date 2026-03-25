@@ -26,7 +26,7 @@ function App() {
     .then(res => (res.ok ? res.json() : null))
     .then(data => setUser(data))
     .catch(err => console.log(err))
-    // .finally(() => setLoading(false));
+    .finally(() => setLoading(false));
   }, []);
   
   if (loading) {
