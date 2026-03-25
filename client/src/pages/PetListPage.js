@@ -6,20 +6,24 @@ import PetCard from "../components/PetCard";
 function PetListPage() {
   const [pets, setPets] = useState([]);
 
-  useEffect(() => {
-    fetch("https://www.linkedin.com/jobs/view/4389425136/", {
-      credentials: "include"
-    })
+useEffect(() => {
+  fetch("http://127.0.0.1:5555/pets", { credentials: "include" })
     .then(res => res.json())
-    .then(data => setPets(data))
+    .then(data => {
+      console.log("API data:", data);
+      setPets(data);
+    })
     .catch(err => console.log(err));
-  }, []);
+}, []);
 
   return (
     <div>
       <h1>Pets</h1>
 
-      {pets.map(pet => (<PetCard key={pet.id} pet={pet} />))}
+      <div className="pet-grid">
+        {pets.map(pet => (<PetCard key={pet.id} pet={pet} />))}
+      </div>
+
     </div>
   );
 }

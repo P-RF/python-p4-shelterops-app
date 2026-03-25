@@ -20,10 +20,12 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.json.compact = False
 app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY", "supersecretkey")
+app.config['SESSION_COOKIE_SAMESITE'] = "Lax"   # Allows cookie on cross-origin GETs
+app.config['SESSION_COOKIE_SECURE'] = False    # Use True only if HTTPS
 
 # Images folder
 BASE_DIR = os.getcwd()
-app.config['IMAGES_FOLDER'] = os.path.join(BASE_DIR, "images")
+app.config['IMAGES_FOLDER'] = os.path.join(BASE_DIR, "images", "pets")
 
 # SQLAlchemy Metadata and db
 metadata = MetaData(naming_convention={
@@ -39,9 +41,10 @@ api = Api(app)
 
 # CORS
 FRONTEND_URLS = [
-    "http://localhost:4000", # Reach dev server
+    "http://localhost:4000", # React dev server
     "http://127.0.0.1:4000", # alt host
 ]
+
 CORS(
     app, 
     resources={r"/*": {"origins": FRONTEND_URLS}},

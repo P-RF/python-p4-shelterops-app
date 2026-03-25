@@ -26,6 +26,7 @@
   background: linear-gradient(to right, white 50%, red 50%);
   border: 2px solid #333;
   animation: drop 2s infinite ease-in;
+  opacity: 0;
 }
 
 /* different delays */

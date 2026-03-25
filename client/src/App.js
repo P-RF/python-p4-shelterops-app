@@ -2,17 +2,18 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-import Navbar from "./components/Navbar";
-import LogoLoader from "./components/LogoLoader";
-
-import DashBoardPage from "./pages/DashboardPage";
 import LoginPage from "./pages/LoginPage";
 import CreateAccountPage from "./pages/CreateAccountPage";
+import LogoLoader from "./components/LogoLoader";
+import Navbar from "./components/Navbar";
+import DashBoardPage from "./pages/DashboardPage";
 import PetlistPage from "./pages/PetListPage";
 import PetDetailPage from "./pages/PetDetailPage";
 import PetFormPage from "./pages/PetFormPage";
 import MedicationLogsPage from "./pages/MedicationLogsPage";
 import MedicationLogFormPage from "./pages/MedicationLogFormPage";
+
+import "./components/PetCard.css";
 
 function App() {
   const [user, setUser] = useState(null); // Null = logged out
